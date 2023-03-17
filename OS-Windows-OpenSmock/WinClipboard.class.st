@@ -14,7 +14,7 @@ Class {
 		'clipboardFormats',
 		'cf_html'
 	],
-	#category : #'OS-Windows-OpenSmock'
+	#category : #'OS-Windows-OpenSmock-Clipboard'
 }
 
 { #category : #'as yet unclassified' }
