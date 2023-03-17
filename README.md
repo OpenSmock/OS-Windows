@@ -12,3 +12,7 @@ Metacello new
 	baseline: 'OSWindows' ;
 	load.
 ```
+
+# Dependencies
+
+[Pharo-OS-Windows](https://github.com/astares/Pharo-OS-Windows)
