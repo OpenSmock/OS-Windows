@@ -11,7 +11,7 @@ Class {
 	#name : #WinFileDialog,
 	#superclass : #Object,
 	#pools : [
-		'SmockWindowsTypes'
+		'SmockWinTypes'
 	],
 	#category : #'OS-Windows-OpenSmock-Dialogs'
 }

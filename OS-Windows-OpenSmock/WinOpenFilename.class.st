@@ -30,7 +30,7 @@ Class {
 		'OFFSET_PVRESERVED'
 	],
 	#pools : [
-		'SmockWindowsTypes'
+		'SmockWinTypes'
 	],
 	#category : #'OS-Windows-OpenSmock-Dialogs-Support'
 }

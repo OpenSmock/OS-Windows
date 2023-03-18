@@ -2,7 +2,7 @@
 OpenFilename types
 "
 Class {
-	#name : #SmockWindowsTypes,
+	#name : #SmockWinTypes,
 	#superclass : #SharedPool,
 	#classVars : [
 		'ATOM',
@@ -71,12 +71,12 @@ Class {
 }
 
 { #category : #'private - initialization' }
-SmockWindowsTypes class >> initKnownTypes [ 
+SmockWinTypes class >> initKnownTypes [
 
 	UINT := #ulong.
 	USHORT := #ushort.
 	SHORT := 'short'.
-	
+
 	BOOL := #bool.
 	DWORD := #ulong.
 	VOID := #void.
@@ -102,7 +102,7 @@ SmockWindowsTypes class >> initKnownTypes [
 	LCID := #DWORD.
 	LCTYPE := #DWORD.
 	LGRPID := #DWORD.
-	
+
 	ULONG := #ulong.
 	LONG := #long.
 	LONGLONG := #longlong.
@@ -115,15 +115,15 @@ SmockWindowsTypes class >> initKnownTypes [
 	LPBYTE := #'BYTE*'.
 	LPCOLORREF := #'DWORD*'.
 	LPOFNHOOKPROC := LONG_PTR.
-	
+
 	PVOID := 'void*'.
 	LPVOID := 'void*'.
 	LPCVOID := #'void*'.
 	LPDWORD := #'DWORD*'.
-	
+
 	PBOOL := 'BOOL*'.
 	PBOOLEAN := 'BOOLEAN*'.
-	
+
 	WNDPROC := #'void*'.
 	HANDLE := #'void*'.
 	HWND := #'void*'.
@@ -132,7 +132,8 @@ SmockWindowsTypes class >> initKnownTypes [
 ]
 
 { #category : #'private - initialization' }
-SmockWindowsTypes class >> initStringTypes [
+SmockWinTypes class >> initStringTypes [
+
 	TCHAR := #WinTCHAR.
 	LPTCH := 'TCHAR*'.
 	WCHAR := 'wchar_t'.
@@ -143,16 +144,17 @@ SmockWindowsTypes class >> initStringTypes [
 	LPCWSTR := 'char*'.
 	LPCSTR := 'char*'.
 	LPSTR 	 := 'char*'.
-	
+
 	LPTSTR := 'char*'.
 	LPWSTR := 'char*'.
-	
+
 	LPCTSTR := LPTSTR
 ]
 
-{ #category : #'private - initialization' }
-SmockWindowsTypes class >> initialize [ 
-<script>
-self initKnownTypes.
-self initStringTypes.
+{ #category : #'class initialization' }
+SmockWinTypes class >> initialize [
+	<script>
+
+	self initKnownTypes.
+	self initStringTypes
 ]
