@@ -49,7 +49,7 @@ WinWindow class >> pharoWindowFixed [
 	<script: 'self pharoWindowFixed inspect'>
 
 	| sdlWindowInfo handle osWindow |
-	osWindow := ActiveWorld worldState worldRenderer window.
+	osWindow := self currentWorld worldState worldRenderer window.
 	sdlWindowInfo := osWindow backendWindow getWMInfo.
 	handle := sdlWindowInfo info win window.
 
