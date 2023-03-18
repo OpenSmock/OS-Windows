@@ -45,11 +45,13 @@ WinWindow >> openIcon: hWnd [
 ]
 
 { #category : #'*OS-Windows-OpenSmock' }
-WinWindow class >> pharoWindow [
-<script: 'self pharoWindow inspect'>
-"ELP CODE"
-	| sdlWindowInfo handle |
-	sdlWindowInfo := World worldState worldRenderer window backendWindow getWMInfo.
+WinWindow class >> pharoWindowFixed [
+	<script: 'self pharoWindowFixed inspect'>
+
+	| sdlWindowInfo handle osWindow |
+	osWindow := ActiveWorld worldState worldRenderer window.
+	sdlWindowInfo := osWindow backendWindow getWMInfo.
 	handle := sdlWindowInfo info win window.
-	^self fromExternalHandle: handle
+
+	^ self fromExternalHandle: handle
 ]
