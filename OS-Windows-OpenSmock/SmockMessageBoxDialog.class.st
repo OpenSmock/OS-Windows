@@ -4,7 +4,7 @@ Class {
 	#pools : [
 		'SmockWindowsTypes'
 	],
-	#category : #'OS-Windows-OpenSmock-Dialog'
+	#category : #'OS-Windows-OpenSmock-Dialogs'
 }
 
 { #category : #actions }

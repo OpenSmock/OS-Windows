@@ -67,7 +67,7 @@ Class {
 		'WNDPROC',
 		'WORD'
 	],
-	#category : #'OS-Windows-OpenSmock-Dialog'
+	#category : #'OS-Windows-OpenSmock-Dialogs-Support'
 }
 
 { #category : #'private - initialization' }
