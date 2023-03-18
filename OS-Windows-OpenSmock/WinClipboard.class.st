@@ -57,7 +57,7 @@ WinClipboard class >> CF_HDROP [
 WinClipboard class >> CF_HTML [
 
 	cf_html ifNil: [
-		cf_html := self getRegisteredClipboardFormat: 'HTML Format' ].
+		cf_html := self getAndRegisterClipboardFormat: self format_HTML ].
 	^ cf_html
 ]
 
@@ -135,6 +135,13 @@ WinClipboard class >> addClipboardByteData: aByteArray withFormat: aFormat [
 	^ true
 ]
 
+{ #category : #private }
+WinClipboard class >> cleanUp: anObject [
+
+	super cleanUp: anObject.
+	self resetClipboard.
+]
+
 { #category : #'api - utils' }
 WinClipboard class >> clearClipboard [
 	<script>
@@ -156,21 +163,25 @@ WinClipboard class >> clipboardConcreteTypes [
 ]
 
 { #category : #private }
-WinClipboard class >> clipboardDataValue: aDatum type: aType [
+WinClipboard class >> clipboardDataValue: aDatum id: anId [
 	"Get clipboard content"
 
 	aDatum ifNil:[ ^ nil ].
 	aDatum isNull ifTrue: [ ^ nil ].
-	aType = self CF_TEXT ifTrue:[
+	
+	anId = self CF_TEXT ifTrue:[
 		^ aDatum bytesFromCString utf8Decoded
 	].
-	aType = self CF_HTML ifTrue:[
+
+	anId = self CF_HTML ifTrue:[
 		^ aDatum bytesFromCString utf8Decoded
 	].
-	aType = self CF_HDROP ifTrue:[
+
+	anId = self CF_HDROP ifTrue:[
 		^ aDatum readStream
 	].
-	^ nil
+
+	^ aDatum readStream
 ]
 
 { #category : #private }
@@ -204,6 +215,47 @@ WinClipboard class >> convertStringToSVG: aString [
 ]
 
 { #category : #'api - utils' }
+WinClipboard class >> currentClipboardEntries [
+	"Return a list of entries for the current clipboard"
+	<script: 'WinClipboard currentClipboardEntries inspect'>
+
+	| base stop oc types |
+	oc := OrderedCollection new.
+	base := 0.
+	stop := false.
+	types := self clipboardConcreteTypes.
+	
+	self openClipboard.
+	[ stop ] whileFalse: [
+		base := self enumClipboardFormats: base.
+		base = 0 ifTrue: [ 
+			stop := true. 
+		] ifFalse: [ | entry | 
+			entry := WinClipboardEntry new.
+			entry id: base.
+			entry isSupported: (types includesKey: base).
+			entry isSupported ifFalse:[ | type |
+				"Try to get the type by the registered list"
+				type := self getRegisteredClipboardFormatFromId: base.
+				type ifNotNil:[ 
+					entry isSupported: true.
+					entry type: type.
+				]. 
+			].
+			
+			entry isSupported ifTrue:[
+				entry type ifNil:[ entry type: (types at: base) ].
+				entry datum: (self getClipboardData: base).
+				entry data: (self clipboardDataValue: (entry datum) id: base).
+			].
+			oc add: entry.
+		].
+	].
+	self closeClipboard. 
+	^ oc
+]
+
+{ #category : #'api - utils' }
 WinClipboard class >> currentClipboardTypes [
 	"Return a list a numeric types into the current clipboard"
 	<script: 'WinClipboard currentClipboardTypes inspect'>
@@ -223,21 +275,6 @@ WinClipboard class >> currentClipboardTypes [
 ]
 
 { #category : #'api - utils' }
-WinClipboard class >> currentConcreteClipboardTypes [
-	"Return a list a enumerated types into the current clipboard"
-	<script: 'WinClipboard currentConcreteClipboardTypes inspect'>
-
-	| oc types |
-	oc := self currentClipboardTypes.
-	types := self clipboardConcreteTypes.
-	oc := oc collect: [ :e |
-		      (types includesKey: e)
-			      ifTrue: [ types at: e ]
-			      ifFalse: [ e ] ].
-	^ oc
-]
-
-{ #category : #'api - utils' }
 WinClipboard class >> emptyClipboard [
 	<script>
 
@@ -248,7 +285,10 @@ WinClipboard class >> emptyClipboard [
 
 { #category : #private }
 WinClipboard class >> enumClipboardFormats: aFormat [
-	^self ffiCall: #(UINT EnumClipboardFormats(UINT aFormat)) module: #user32
+
+	^ self
+		  ffiCall: #( UINT EnumClipboardFormats #( UINT aFormat ) )
+		  module: #user32
 ]
 
 { #category : #private }
@@ -260,6 +300,33 @@ WinClipboard class >> findToken: aToken in: aString [
 	list size > 0 ifFalse: [^nil].
 	elem := list first splitOn: ':'.
 	^elem last asNumber
+]
+
+{ #category : #format }
+WinClipboard class >> format_HTML [
+
+	^ 'HTML Format'
+]
+
+{ #category : #format }
+WinClipboard class >> format_imageSvgXml [
+
+	^ 'image/svg+xml'
+]
+
+{ #category : #format }
+WinClipboard class >> format_imageXInkscapeSvg [
+
+	^ 'image/x-inkscape-svg'
+]
+
+{ #category : #private }
+WinClipboard class >> getAndRegisterClipboardFormat: aFormat [
+
+	| f |
+	f := self registerClipboardFormat: aFormat.
+	self registeredClipboardFormats at: aFormat put: f.
+	^ f
 ]
 
 { #category : #private }
@@ -287,7 +354,7 @@ WinClipboard class >> getByteClipboardData: aType [
 WinClipboard class >> getByteClipboardDataFrom: aStringType [
 
 	| type |
-	type := self getRegisteredClipboardFormat: aStringType.
+	type := self getAndRegisterClipboardFormat: aStringType.
 	^self getByteClipboardData: type
 ]
 
@@ -305,7 +372,7 @@ WinClipboard class >> getHTMLClipboardData [
 	| datum aStringOrNil |
 	self openClipboard.
 	datum := self getClipboardData: self CF_HTML.
-	aStringOrNil := self clipboardDataValue: datum type: self CF_HTML.
+	aStringOrNil := self clipboardDataValue: datum id: self CF_HTML.
 	self closeClipboard.
 	^ aStringOrNil
 ]
@@ -332,12 +399,10 @@ WinClipboard class >> getPNGClipboardData [
 ]
 
 { #category : #private }
-WinClipboard class >> getRegisteredClipboardFormat: aFormat [
+WinClipboard class >> getRegisteredClipboardFormatFromId: anId [
 
-	| f |
-	f := self registerClipboardFormat: aFormat.
-	self registeredClipboardFormats at: aFormat put: f.
-	^f
+	self registeredClipboardFormats keysAndValuesDo: [ :type :id | id = anId ifTrue:[ ^ type ] ].
+	^ nil
 ]
 
 { #category : #'api - text' }
@@ -347,7 +412,7 @@ WinClipboard class >> getTextClipboardData [
 	| datum aStringOrNil |
 	self openClipboard.
 	datum := self getClipboardData: self CF_TEXT.
-	aStringOrNil := self clipboardDataValue: datum type: self CF_TEXT.
+	aStringOrNil := self clipboardDataValue: datum id: self CF_TEXT.
 	self closeClipboard.
 	^ aStringOrNil
 ]
@@ -376,6 +441,7 @@ WinClipboard class >> globalUnlock: hMem [
 WinClipboard class >> openClipboard [
 	<script>
 
+	self registerClipboardFormat.
 	^ self openClipboard: (ExternalAddress fromAddress: 0)
 ]
 
@@ -389,18 +455,7 @@ WinClipboard class >> openClipboard: aHwnd [
 ]
 
 { #category : #'api - bitmap image' }
-WinClipboard class >> pastePNGFromClipboard [
-	<script: 'self pastePNGFromClipboard inspect'>
-
-	| bytes |
-	bytes := self getByteClipboardDataFrom: 'PNG'.
-	bytes
-		ifNil: [ ^ self pastePNGFromHDROP ]
-		ifNotNil: [ ^ ImageReadWriter formFromStream: bytes readStream ]
-]
-
-{ #category : #'api - bitmap image' }
-WinClipboard class >> pastePNGFromDIB [
+WinClipboard class >> pasteImageFromDIB [
 	<script: 'self pastePNGFromDIB inspect'>
 
 	| bytes |
@@ -411,8 +466,8 @@ WinClipboard class >> pastePNGFromDIB [
 ]
 
 { #category : #'api - bitmap image' }
-WinClipboard class >> pastePNGFromHDROP [
-	<script: 'self pastePNGFromHDROP inspect'>
+WinClipboard class >> pasteImageFromHDROP [
+	<script: 'self pasteImageFromHDROP inspect'>
 
 	| bytes |
 	bytes := self getByteClipboardData: self CF_HDROP.
@@ -421,21 +476,44 @@ WinClipboard class >> pastePNGFromHDROP [
 		ifNotNil: [ ^ ImageReadWriter formFromStream: bytes readStream ]
 ]
 
+{ #category : #'api - bitmap image' }
+WinClipboard class >> pastePNGFromClipboard [
+	<script: 'self pastePNGFromClipboard inspect'>
+
+	| bytes |
+	bytes := self getByteClipboardDataFrom: 'PNG'.
+	bytes
+		ifNil: [ ^ self pasteImageFromHDROP ]
+		ifNotNil: [ ^ ImageReadWriter formFromStream: bytes readStream ]
+]
+
 { #category : #'api - SVG' }
 WinClipboard class >> pasteSVGFromClipboard [
 	<script: 'self pasteSVGFromClipboard inspect'>
 
 	| data |
-	data := self getByteClipboardDataFrom: 'image/svg+xml'.
-	data ifNil: [ data := self getByteClipboardDataFrom: 'image/x-inkscape-svg' ].
+	data := self getByteClipboardDataFrom: self format_imageSvgXml.
+	data ifNil: [ data := self getByteClipboardDataFrom: self format_imageXInkscapeSvg ].
 	data ifNil: [ ^ nil ].
 	data := data utf8Decoded.
 	^ self convertStringToSVG: data
 ]
 
+{ #category : #'api - utils' }
+WinClipboard class >> registerClipboardFormat [
+	<script>
+
+	self getAndRegisterClipboardFormat: self format_HTML.
+	self getAndRegisterClipboardFormat: self format_imageSvgXml.
+	self getAndRegisterClipboardFormat: self format_imageXInkscapeSvg.
+]
+
 { #category : #private }
 WinClipboard class >> registerClipboardFormat: aString [
-	^self ffiCall: #(UINT RegisterClipboardFormatA(LPTSTR aString)) module: #user32
+
+	^ self
+		  ffiCall: #( UINT RegisterClipboardFormatA #( LPTSTR aString ) )
+		  module: #user32
 ]
 
 { #category : #private }
@@ -450,12 +528,6 @@ WinClipboard class >> resetClipboard [
 
 	cf_html := nil.
 	clipboardFormats := nil
-]
-
-{ #category : #'api - HTML' }
-WinClipboard class >> resetHTML [
-
-	^ self resetClipboard
 ]
 
 { #category : #private }
@@ -484,6 +556,10 @@ WinClipboard class >> setClipboardTextData: aFormat value: aString [
 WinClipboard class >> setPNGByteClipboardData: aByteArray [
 
 	| type |
-	type := self getRegisteredClipboardFormat: 'PNG'.
+	type := self getAndRegisterClipboardFormat: 'PNG'.
 	^self setByteClipboardData: type value: aByteArray
+]
+
+{ #category : #'see class side' }
+WinClipboard >> seeClassSide [
 ]
