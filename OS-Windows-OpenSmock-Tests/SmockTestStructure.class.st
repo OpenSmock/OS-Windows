@@ -30,7 +30,7 @@ Class {
 		'OFFSET_PVRESERVED'
 	],
 	#pools : [
-		'SmockWindowsTypes'
+		'SmockWinTypes'
 	],
 	#category : #'OS-Windows-OpenSmock-Tests'
 }
@@ -65,8 +65,9 @@ SmockTestStructure class >> fieldsDesc [
 
 { #category : #tests }
 SmockTestStructure class >> testStructureValidation [
-<script>
-(FFIExternalStructureType objectClass: self ) tfExternalType validate inspect
+	<script:' self testStructureValidation inspect'>
+
+	(FFIExternalStructureType objectClass: self) tfExternalType validate
 ]
 
 { #category : #'accessing - structure variables' }
