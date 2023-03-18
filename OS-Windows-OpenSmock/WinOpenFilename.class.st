@@ -11,6 +11,7 @@ Class {
 		'OFFSET_HINSTANCE',
 		'OFFSET_HWNDOWNER',
 		'OFFSET_LCUSTDATA',
+		'OFFSET_LPEDITINFO',
 		'OFFSET_LPFNHOOK',
 		'OFFSET_LPSTRCUSTOMFILTER',
 		'OFFSET_LPSTRDEFEXT',
@@ -18,6 +19,7 @@ Class {
 		'OFFSET_LPSTRFILETITLE',
 		'OFFSET_LPSTRFILTER',
 		'OFFSET_LPSTRINITIALDIR',
+		'OFFSET_LPSTRPROMPT',
 		'OFFSET_LPSTRTITLE',
 		'OFFSET_LPTEMPLATENAME',
 		'OFFSET_LSTRUCTSIZE',
@@ -195,13 +197,13 @@ WinOpenFilename >> lStructSize: anObject [
 	^handle platformUnsignedLongAt: OFFSET_LSTRUCTSIZE put: anObject
 ]
 
-{ #category : #'accessing structure variables' }
+{ #category : #'accessing - structure variables' }
 WinOpenFilename >> lpEditInfo [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPEDITINFO) type: ExternalType void asPointerType
 ]
 
-{ #category : #'accessing structure variables' }
+{ #category : #'accessing - structure variables' }
 WinOpenFilename >> lpEditInfo: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPEDITINFO put: anObject getHandle.
@@ -303,13 +305,13 @@ WinOpenFilename >> lpstrInitialDir: anObject [
 	handle pointerAt: OFFSET_LPSTRINITIALDIR put: anObject getHandle.
 ]
 
-{ #category : #'accessing structure variables' }
+{ #category : #'accessing - structure variables' }
 WinOpenFilename >> lpstrPrompt [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRPROMPT) type: ExternalType char asPointerType
 ]
 
-{ #category : #'accessing structure variables' }
+{ #category : #'accessing - structure variables' }
 WinOpenFilename >> lpstrPrompt: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRPROMPT put: anObject getHandle.
