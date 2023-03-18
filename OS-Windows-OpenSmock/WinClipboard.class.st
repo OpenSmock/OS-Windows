@@ -145,6 +145,35 @@ WinClipboard class >> clearClipboard [
 ]
 
 { #category : #private }
+WinClipboard class >> clipboardConcreteTypes [
+	"Return a list a enumerated types into the current clipboard"
+	<script: 'WinClipboard clipboardConcreteTypes inspect'>
+
+	| types |
+	types := Dictionary new.
+	self clipboardTypes do: [ :e | types at: (self perform: e) put: e ].
+	^types
+]
+
+{ #category : #private }
+WinClipboard class >> clipboardDataValue: aDatum type: aType [
+	"Get clipboard content"
+
+	aDatum ifNil:[ ^ nil ].
+	aDatum isNull ifTrue: [ ^ nil ].
+	aType = self CF_TEXT ifTrue:[
+		^ aDatum bytesFromCString utf8Decoded
+	].
+	aType = self CF_HTML ifTrue:[
+		^ aDatum bytesFromCString utf8Decoded
+	].
+	aType = self CF_HDROP ifTrue:[
+		^ aDatum readStream
+	].
+	^ nil
+]
+
+{ #category : #private }
 WinClipboard class >> clipboardTypes [
 
 	^ #( #CF_BITMAP  #CF_DIB  #CF_DIBV5  #CF_DIF  #CF_ENHMETAFILE
@@ -175,23 +204,9 @@ WinClipboard class >> convertStringToSVG: aString [
 ]
 
 { #category : #'api - utils' }
-WinClipboard class >> emptyClipboard [
-
-	<script>
-	^ self
-		ffiCall: #( BOOL EmptyClipboard #(  ) )
-		module: #user32
-]
-
-{ #category : #private }
-WinClipboard class >> enumClipboardFormats: aFormat [
-	^self ffiCall: #(UINT EnumClipboardFormats(UINT aFormat)) module: #user32
-]
-
-{ #category : #'api - utils' }
-WinClipboard class >> enumClipboardTypes [
+WinClipboard class >> currentClipboardTypes [
 	"Return a list a numeric types into the current clipboard"
-	<script: 'WinClipboard enumClipboardTypes inspect'>
+	<script: 'WinClipboard currentClipboardTypes inspect'>
 
 	| base arret oc |
 	self openClipboard.
@@ -208,19 +223,32 @@ WinClipboard class >> enumClipboardTypes [
 ]
 
 { #category : #'api - utils' }
-WinClipboard class >> enumConcreteClipboardTypes [
+WinClipboard class >> currentConcreteClipboardTypes [
 	"Return a list a enumerated types into the current clipboard"
-	<script: 'WinClipboard enumConcreteClipboardTypes inspect'>
+	<script: 'WinClipboard currentConcreteClipboardTypes inspect'>
 
 	| oc types |
-	oc := self enumClipboardTypes.
-	types := Dictionary new.
-	self clipboardTypes do: [ :e | types at: (self perform: e) put: e ].
+	oc := self currentClipboardTypes.
+	types := self clipboardConcreteTypes.
 	oc := oc collect: [ :e |
 		      (types includesKey: e)
 			      ifTrue: [ types at: e ]
 			      ifFalse: [ e ] ].
 	^ oc
+]
+
+{ #category : #'api - utils' }
+WinClipboard class >> emptyClipboard [
+	<script>
+
+	^ self
+		ffiCall: #( BOOL EmptyClipboard #(  ) )
+		module: #user32
+]
+
+{ #category : #private }
+WinClipboard class >> enumClipboardFormats: aFormat [
+	^self ffiCall: #(UINT EnumClipboardFormats(UINT aFormat)) module: #user32
 ]
 
 { #category : #private }
@@ -265,37 +293,35 @@ WinClipboard class >> getByteClipboardDataFrom: aStringType [
 
 { #category : #private }
 WinClipboard class >> getClipboardData: aFormat [
-	^self ffiCall: #(void* GetClipboardData( UINT aFormat)) module: #user32
+
+	^ self
+		  ffiCall: #( void * GetClipboardData #( UINT aFormat ) )
+		  module: #user32
 ]
 
 { #category : #'api - HTML' }
 WinClipboard class >> getHTMLClipboardData [
 	<script: 'self getHTMLClipboardData inspect'>
-	| datum val |
+	| datum aStringOrNil |
 	self openClipboard.
 	datum := self getClipboardData: self CF_HTML.
-	val := datum isNull
-		       ifTrue: [ nil ]
-		       ifFalse: [ datum bytesFromCString ].
+	aStringOrNil := self clipboardDataValue: datum type: self CF_HTML.
 	self closeClipboard.
-	^ val
+	^ aStringOrNil
 ]
 
 { #category : #'api - HTML' }
 WinClipboard class >> getHTMLClipboardDataContent [
 	<script: 'self getHTMLClipboardDataContent inspect'>
 
-	| data index lastIndex dataOri |
-	dataOri := self getHTMLClipboardData.
-	dataOri ifNil: [ ^ nil ].
-	data := dataOri utf8Decoded.
-	index := self findToken: 'StartFragment' in: data.
-	lastIndex := self findToken: 'EndFragment' in: data.
-	data := dataOri.
-	lastIndex ifNotNil: [ data := data first: lastIndex ].
-	index ifNotNil: [ "index := index + '<!--StartFragment -->' size." 
-		data := data allButFirst: index ].
-	^ data utf8Decoded
+	| string index lastIndex |
+	string := self getHTMLClipboardData.
+	string ifNil:[ ^nil ].
+	index := self findToken: 'StartFragment' in: string.
+	lastIndex := self findToken: 'EndFragment' in: string.
+	lastIndex ifNotNil: [ string := string first: lastIndex ].
+	index ifNotNil: [ string := string allButFirst: index ].
+	^ string
 ]
 
 { #category : #'api - bitmap image' }
@@ -318,14 +344,12 @@ WinClipboard class >> getRegisteredClipboardFormat: aFormat [
 WinClipboard class >> getTextClipboardData [
 
 	<script: 'self getTextClipboardData inspect'>
-	| datum val |
+	| datum aStringOrNil |
 	self openClipboard.
 	datum := self getClipboardData: self CF_TEXT.
-	val := datum isNull not
-		       ifFalse: [ nil ]
-		       ifTrue: [ datum bytesFromCString utf8Decoded ].
+	aStringOrNil := self clipboardDataValue: datum type: self CF_TEXT.
 	self closeClipboard.
-	^ val
+	^ aStringOrNil
 ]
 
 { #category : #private }
@@ -357,8 +381,11 @@ WinClipboard class >> openClipboard [
 
 { #category : #private }
 WinClipboard class >> openClipboard: aHwnd [
-<script> 
-	^self ffiCall: #(bool OpenClipboard( HWND aHwnd )) module: #user32
+	<script>
+
+	^ self
+		  ffiCall: #( bool OpenClipboard #( HWND aHwnd ) )
+		  module: #user32
 ]
 
 { #category : #'api - bitmap image' }
