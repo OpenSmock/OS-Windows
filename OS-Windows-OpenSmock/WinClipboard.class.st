@@ -176,8 +176,11 @@ WinClipboard class >> convertStringToSVG: aString [
 
 { #category : #'api - utils' }
 WinClipboard class >> emptyClipboard [
-<script> 
-	^self ffiCall: #(BOOL EmptyClipboard()) module: #user32
+
+	<script>
+	^ self
+		ffiCall: #( BOOL EmptyClipboard #(  ) )
+		module: #user32
 ]
 
 { #category : #private }

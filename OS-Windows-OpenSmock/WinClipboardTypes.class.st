@@ -7,7 +7,7 @@ Class {
 	#classVars : [
 		'SIZE_T'
 	],
-	#category : #'OS-Windows-OpenSmock-Clipboard'
+	#category : #'OS-Windows-OpenSmock-Clipboard-Support'
 }
 
 { #category : #initialization }

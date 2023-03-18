@@ -2,7 +2,7 @@
 Structure de base OPENFILENAME
 "
 Class {
-	#name : #SmockOpenFileName,
+	#name : #WinOpenFilename,
 	#superclass : #FFIExternalStructure,
 	#classVars : [
 		'OFFSET_DWRESERVED',
@@ -36,40 +36,66 @@ Class {
 }
 
 { #category : #'field definition' }
-SmockOpenFileName class >> chooseFilename [
-"self chooseFilename"
-| ofn szFile str buf |
-ofn := self new.
-ofn lStructSize: self structureSize.
-szFile := FFIExternalArray externalNewType: 'char' size: 260.
-ofn hwndOwner: (ExternalAddress fromAddress: 0).
-ofn lpstrFile: szFile.
-szFile at: 1 put: (0 asCharacter).
-ofn nMaxFile: szFile size.
-str := ('All',0 asCharacter asString,'*.*',0 asCharacter asString, 0 asCharacter asString).
-buf := FFIExternalArray externalNewType: 'char' size: str size.
-str doWithIndex: [ :k :i | buf at: i put: k ].
-ofn lpstrFilter: buf.  
-ofn nFilterIndex: 0.
-ofn nMaxFileTitle: 0.
-^ofn
+WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean [
+	"Build a string with a list of displayed files"
 
+	| string |
+	string := String new.
+	
+	"Option : Add All files option"
+	aBoolean ifTrue:[
+		string := string , 'All' , 0 asCharacter asString , '*.*', 0 asCharacter asString.
+	].
+	
+	"Only build list with same number of arguments"
+	(aTypenameList notNil and:[anExtensionList notNil and:[aTypenameList size = anExtensionList size]]) ifTrue:[
+		1 to: aTypenameList size do:[ :i | 
+			string := string , (aTypenameList at: i) , 0 asCharacter asString , (anExtensionList at: i) , 0 asCharacter asString, 0 asCharacter asString.
+		].
+	].
+	
+	string := string , 0 asCharacter asString.
+	
+	^ string
 ]
 
 { #category : #'field definition' }
-SmockOpenFileName class >> chooseFilenameType: aTypename extension: aString [
-	"self chooseFilenameType: 'Texte' extension: 'txt'"
+WinOpenFilename class >> chooseFilename [
+	"self chooseFilename"
 
 	| ofn szFile str buf |
 	ofn := self new.
-	ofn lStructSize: SmockOpenFileName structureSize.
+	ofn lStructSize: self structureSize.
 	szFile := FFIExternalArray externalNewType: 'char' size: 260.
 	ofn hwndOwner: (ExternalAddress fromAddress: 0).
 	ofn lpstrFile: szFile.
 	szFile at: 1 put: 0 asCharacter.
 	ofn nMaxFile: szFile size.
-	str := 'All' , 0 asCharacter asString , '*.*'
-		, 0 asCharacter asString , aTypename , 0 asCharacter asString , aString , 0 asCharacter asString, 0 asCharacter asString.
+
+	str := self buildStringFilenameTypes: nil extensions: nil allFilesOption: true.
+
+	buf := FFIExternalArray externalNewType: 'char' size: str size.
+	str doWithIndex: [ :k :i | buf at: i put: k ].
+	ofn lpstrFilter: buf.
+	ofn nFilterIndex: 0.
+	ofn nMaxFileTitle: 0.
+	^ ofn
+]
+
+{ #category : #'field definition' }
+WinOpenFilename class >> chooseFilenameType: aTypename extension: aString [
+
+	| ofn szFile str buf |
+	ofn := self new.
+	ofn lStructSize: self structureSize.
+	szFile := FFIExternalArray externalNewType: 'char' size: 260.
+	ofn hwndOwner: (ExternalAddress fromAddress: 0).
+	ofn lpstrFile: szFile.
+	szFile at: 1 put: 0 asCharacter.
+	ofn nMaxFile: szFile size.
+	
+	str := self buildStringFilenameTypes: (OrderedCollection with: aTypename) extensions: (OrderedCollection with: aString) allFilesOption: true.
+		
 	buf := FFIExternalArray externalNewType: 'char' size: str size.
 	str doWithIndex: [ :k :i | buf at: i put: k ].
 	ofn lpstrFilter: buf.
@@ -79,29 +105,53 @@ SmockOpenFileName class >> chooseFilenameType: aTypename extension: aString [
 ]
 
 { #category : #'field definition' }
-SmockOpenFileName class >> defaultAllFilename [
-| ofn szFile str buf |
-ofn := self new.
-ofn lStructSize: SmockOpenFileName structureSize.
-szFile := FFIExternalArray externalNewType: 'char' size: 100.
-"ofn hwndOwner: WinWindow pharoWindow."
-ofn hwndOwner: 0.
-ofn lpstrFile: szFile.
-szFile at: 1 put: (0 asCharacter).
-ofn nMaxFile: szFile size.
-str := ('All',0 asCharacter asString,'*.*',0 asCharacter asString,'TEXT',0 asCharacter asString,'*.TXT',0 asCharacter asString).
-buf := FFIExternalArray externalNewType: 'char' size: str size.
-str doWithIndex: [ :k :i | buf at: i put: k ].
-ofn lpstrFilter: buf.  
-ofn nFilterIndex: 1.
-ofn nMaxFileTitle: 0.
+WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean [
 
-^ofn
-
+	| ofn szFile str buf |
+	ofn := self new.
+	ofn lStructSize: self structureSize.
+	szFile := FFIExternalArray externalNewType: 'char' size: 260.
+	ofn hwndOwner: (ExternalAddress fromAddress: 0).
+	ofn lpstrFile: szFile.
+	szFile at: 1 put: 0 asCharacter.
+	ofn nMaxFile: szFile size.
+	
+	str := self buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean.
+		
+	buf := FFIExternalArray externalNewType: 'char' size: str size.
+	str doWithIndex: [ :k :i | buf at: i put: k ].
+	ofn lpstrFilter: buf.
+	ofn nFilterIndex: 2.
+	ofn nMaxFileTitle: 0.
+	^ ofn
 ]
 
 { #category : #'field definition' }
-SmockOpenFileName class >> fieldsDesc [
+WinOpenFilename class >> defaultAllFilename [
+
+	| ofn szFile str buf |
+	ofn := self new.
+	ofn lStructSize: self structureSize.
+	szFile := FFIExternalArray externalNewType: 'char' size: 100.
+	"ofn hwndOwner: WinWindow pharoWindow."
+	ofn hwndOwner: 0.
+	ofn lpstrFile: szFile.
+	szFile at: 1 put: 0 asCharacter.
+	ofn nMaxFile: szFile size.
+	str := 'All' , 0 asCharacter asString , '*.*'
+	       , 0 asCharacter asString , 'TEXT' , 0 asCharacter asString
+	       , '*.TXT' , 0 asCharacter asString.
+	buf := FFIExternalArray externalNewType: 'char' size: str size.
+	str doWithIndex: [ :k :i | buf at: i put: k ].
+	ofn lpstrFilter: buf.
+	ofn nFilterIndex: 1.
+	ofn nMaxFileTitle: 0.
+
+	^ ofn
+]
+
+{ #category : #'field definition' }
+WinOpenFilename class >> fieldsDesc [
 	"self rebuildFieldAccessors"
 	^ #(
     DWORD lStructSize;
@@ -131,301 +181,301 @@ SmockOpenFileName class >> fieldsDesc [
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> Flags [
+WinOpenFilename >> Flags [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_FLAGS
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> Flags: anObject [
+WinOpenFilename >> Flags: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_FLAGS put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> FlagsEx [
+WinOpenFilename >> FlagsEx [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_FLAGSEX
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> FlagsEx: anObject [
+WinOpenFilename >> FlagsEx: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_FLAGSEX put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> dwReserved [
+WinOpenFilename >> dwReserved [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_DWRESERVED
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> dwReserved: anObject [
+WinOpenFilename >> dwReserved: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_DWRESERVED put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> hInstance [
+WinOpenFilename >> hInstance [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_HINSTANCE) type: ExternalType void asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> hInstance: anObject [
+WinOpenFilename >> hInstance: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_HINSTANCE put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> hwndOwner [
+WinOpenFilename >> hwndOwner [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_HWNDOWNER) type: ExternalType void asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> hwndOwner: anObject [
+WinOpenFilename >> hwndOwner: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_HWNDOWNER put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lCustData [
+WinOpenFilename >> lCustData [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LCUSTDATA) type: ExternalType void asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lCustData: anObject [
+WinOpenFilename >> lCustData: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LCUSTDATA put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lStructSize [
+WinOpenFilename >> lStructSize [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_LSTRUCTSIZE
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lStructSize: anObject [
+WinOpenFilename >> lStructSize: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_LSTRUCTSIZE put: anObject
 ]
 
 { #category : #'accessing structure variables' }
-SmockOpenFileName >> lpEditInfo [
+WinOpenFilename >> lpEditInfo [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPEDITINFO) type: ExternalType void asPointerType
 ]
 
 { #category : #'accessing structure variables' }
-SmockOpenFileName >> lpEditInfo: anObject [
+WinOpenFilename >> lpEditInfo: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPEDITINFO put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpTemplateName [
+WinOpenFilename >> lpTemplateName [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPTEMPLATENAME) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpTemplateName: anObject [
+WinOpenFilename >> lpTemplateName: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPTEMPLATENAME put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpfnHook [
+WinOpenFilename >> lpfnHook [
 	"This method was automatically generated"
 	^handle platformLongAt: OFFSET_LPFNHOOK
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpfnHook: anObject [
+WinOpenFilename >> lpfnHook: anObject [
 	"This method was automatically generated"
 	^handle platformLongAt: OFFSET_LPFNHOOK put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrCustomFilter [
+WinOpenFilename >> lpstrCustomFilter [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRCUSTOMFILTER) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrCustomFilter: anObject [
+WinOpenFilename >> lpstrCustomFilter: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRCUSTOMFILTER put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrDefExt [
+WinOpenFilename >> lpstrDefExt [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRDEFEXT) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrDefExt: anObject [
+WinOpenFilename >> lpstrDefExt: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRDEFEXT put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrFile [
+WinOpenFilename >> lpstrFile [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRFILE) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrFile: anObject [
+WinOpenFilename >> lpstrFile: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRFILE put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrFileTitle [
+WinOpenFilename >> lpstrFileTitle [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRFILETITLE) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrFileTitle: anObject [
+WinOpenFilename >> lpstrFileTitle: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRFILETITLE put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrFilter [
+WinOpenFilename >> lpstrFilter [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRFILTER) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrFilter: anObject [
+WinOpenFilename >> lpstrFilter: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRFILTER put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrInitialDir [
+WinOpenFilename >> lpstrInitialDir [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRINITIALDIR) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrInitialDir: anObject [
+WinOpenFilename >> lpstrInitialDir: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRINITIALDIR put: anObject getHandle.
 ]
 
 { #category : #'accessing structure variables' }
-SmockOpenFileName >> lpstrPrompt [
+WinOpenFilename >> lpstrPrompt [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRPROMPT) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing structure variables' }
-SmockOpenFileName >> lpstrPrompt: anObject [
+WinOpenFilename >> lpstrPrompt: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRPROMPT put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrTitle [
+WinOpenFilename >> lpstrTitle [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_LPSTRTITLE) type: ExternalType char asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> lpstrTitle: anObject [
+WinOpenFilename >> lpstrTitle: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_LPSTRTITLE put: anObject getHandle.
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nFileExtension [
+WinOpenFilename >> nFileExtension [
 	"This method was automatically generated"
 	^handle unsignedShortAt: OFFSET_NFILEEXTENSION
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nFileExtension: anObject [
+WinOpenFilename >> nFileExtension: anObject [
 	"This method was automatically generated"
 	handle unsignedShortAt: OFFSET_NFILEEXTENSION put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nFileOffset [
+WinOpenFilename >> nFileOffset [
 	"This method was automatically generated"
 	^handle unsignedShortAt: OFFSET_NFILEOFFSET
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nFileOffset: anObject [
+WinOpenFilename >> nFileOffset: anObject [
 	"This method was automatically generated"
 	handle unsignedShortAt: OFFSET_NFILEOFFSET put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nFilterIndex [
+WinOpenFilename >> nFilterIndex [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NFILTERINDEX
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nFilterIndex: anObject [
+WinOpenFilename >> nFilterIndex: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NFILTERINDEX put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nMaxCustFilter [
+WinOpenFilename >> nMaxCustFilter [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NMAXCUSTFILTER
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nMaxCustFilter: anObject [
+WinOpenFilename >> nMaxCustFilter: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NMAXCUSTFILTER put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nMaxFile [
+WinOpenFilename >> nMaxFile [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NMAXFILE
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nMaxFile: anObject [
+WinOpenFilename >> nMaxFile: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NMAXFILE put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nMaxFileTitle [
+WinOpenFilename >> nMaxFileTitle [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NMAXFILETITLE
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> nMaxFileTitle: anObject [
+WinOpenFilename >> nMaxFileTitle: anObject [
 	"This method was automatically generated"
 	^handle platformUnsignedLongAt: OFFSET_NMAXFILETITLE put: anObject
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> pvReserved [
+WinOpenFilename >> pvReserved [
 	"This method was automatically generated"
 	^ExternalData fromHandle: (handle pointerAt: OFFSET_PVRESERVED) type: ExternalType void asPointerType
 ]
 
 { #category : #'accessing - structure variables' }
-SmockOpenFileName >> pvReserved: anObject [
+WinOpenFilename >> pvReserved: anObject [
 	"This method was automatically generated"
 	handle pointerAt: OFFSET_PVRESERVED put: anObject getHandle.
 ]
