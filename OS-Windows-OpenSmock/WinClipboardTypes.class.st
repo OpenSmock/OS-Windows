@@ -13,12 +13,11 @@ Class {
 { #category : #initialization }
 WinClipboardTypes class >> initBasicTypes [
 
-	SIZE_T := #uint.
+	SIZE_T := #uint
 ]
 
 { #category : #initialization }
 WinClipboardTypes class >> initialize [
 
-	self
-		initBasicTypes.
+	self initBasicTypes
 ]

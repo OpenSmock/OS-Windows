@@ -17,85 +17,99 @@ Class {
 	#category : #'OS-Windows-OpenSmock-Clipboard'
 }
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_BITMAP [
-^2
+
+	^ 2
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_DIB [
-^8
+
+	^ 8
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_DIBV5 [
-^17
+
+	^ 17
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_DIF [
-^5
+
+	^ 5
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_ENHMETAFILE [
-^14
+
+	^ 14
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_HDROP [
-^15
+
+	^ 15
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_HTML [
 
-	cf_html isNil
-		ifTrue: [cf_html := self getRegisteredClipboardFormat: 'HTML Format'].
-	^cf_html
+	cf_html ifNil: [
+		cf_html := self getRegisteredClipboardFormat: 'HTML Format' ].
+	^ cf_html
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_LOCALE [
-^16
+
+	^ 16
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_METAFILEPICT [
-^3
+
+	^ 3
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_OEMTEXT [
-^7
+
+	^ 7
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_PENDATA [
-^10
+
+	^ 10
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_TEXT [
-^1
+
+	^ 1
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_UNICODETEXT [
-^13
+
+	^ 13
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> CF_WAVE [
-^12
+
+	^ 12
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constants }
 WinClipboard class >> GMEM_MOVEABLE [
-^16r0002
+
+	^ 16r0002
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> addClipboardByteData: aByteArray withFormat: aFormat [
 
 	| out array outm |
@@ -121,7 +135,7 @@ WinClipboard class >> addClipboardByteData: aByteArray withFormat: aFormat [
 	^ true
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> clearClipboard [
 <script>
 	self openClipboard.
@@ -129,7 +143,7 @@ WinClipboard class >> clearClipboard [
 	self closeClipboard.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> clipboardTypes [
 
 	^ #( #CF_BITMAP  #CF_DIB  #CF_DIBV5  #CF_DIF  #CF_ENHMETAFILE
@@ -138,24 +152,36 @@ WinClipboard class >> clipboardTypes [
 	      #CF_WAVE )
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> closeClipboard [
 <script> 
 	^self ffiCall: #(BOOL CloseClipboard()) module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
+WinClipboard class >> convertStringToSVG: aString [
+	"Use an existing system library to convert String into a SVG"
+
+	"Bloc SVG library"
+	(Smalltalk hasClassNamed: #BlSvgConverter) ifTrue:[
+		^ BlSvgConverter convertFromString: aString
+	].
+
+	^ nil
+]
+
+{ #category : #'api - utils' }
 WinClipboard class >> emptyClipboard [
 <script> 
 	^self ffiCall: #(BOOL EmptyClipboard()) module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> enumClipboardFormats: aFormat [
 	^self ffiCall: #(UINT EnumClipboardFormats(UINT aFormat)) module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> enumClipboardTypes [
 <script: 'WinClipboard enumClipboardTypes inspect'>
 	| base arret oc |
@@ -172,7 +198,7 @@ WinClipboard class >> enumClipboardTypes [
 	^ oc
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> enumConcreteClipboardTypes [
 
 	<script: 'WinClipboard enumConcreteClipboardTypes inspect'>
@@ -184,18 +210,18 @@ oc := oc collect: [ :e | (types includesKey: e) ifTrue: [ types at: e ]  ifFalse
 ^oc
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> findToken: aToken in: aString [
 
 	| list elem |
-	list := aString getLines.
+	list := aString lines.
 	list := list select: [:e | '*' , aToken , '*' match: e].
 	list size > 0 ifFalse: [^nil].
 	elem := list first splitOn: ':'.
 	^elem last asNumber
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> getByteClipboardData: aType [
 
 	| datum val length |
@@ -216,7 +242,7 @@ WinClipboard class >> getByteClipboardData: aType [
 	^ val
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> getByteClipboardDataFrom: aStringType [
 
 	| type |
@@ -224,12 +250,12 @@ WinClipboard class >> getByteClipboardDataFrom: aStringType [
 	^self getByteClipboardData: type
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> getClipboardData: aFormat [
 	^self ffiCall: #(void* GetClipboardData( UINT aFormat)) module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - HTML' }
 WinClipboard class >> getHTMLClipboardData [
 	<script: 'self getHTMLClipboardData inspect'>
 	| datum val |
@@ -242,7 +268,7 @@ WinClipboard class >> getHTMLClipboardData [
 	^ val
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - HTML' }
 WinClipboard class >> getHTMLClipboardDataContent [
 	<script: 'self getHTMLClipboardDataContent inspect'>
 
@@ -259,13 +285,13 @@ WinClipboard class >> getHTMLClipboardDataContent [
 	^ data utf8Decoded
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - bitmap image' }
 WinClipboard class >> getPNGClipboardData [
 	<script: 'self getPNGClipboardData inspect'>
 	^ self getByteClipboardDataFrom: 'PNG'
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> getRegisteredClipboardFormat: aFormat [
 
 	| f |
@@ -274,7 +300,7 @@ WinClipboard class >> getRegisteredClipboardFormat: aFormat [
 	^f
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - text' }
 WinClipboard class >> getTextClipboardData [
 
 	<script: 'self getTextClipboardData inspect'>
@@ -288,39 +314,39 @@ WinClipboard class >> getTextClipboardData [
 	^ val
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> globalAlloc: flags size: bytes [
 	^self ffiCall: #(void* GlobalAlloc(UINT flags, SIZE_T bytes)) module: #kernel32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> globalLock: hMem [
 	^self ffiCall: #(LPVOID GlobalLock(void* hMem)) module: #kernel32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> globalSize: hMem [
 	^self ffiCall: #(SIZE_T GlobalSize(void* hMem)) module: #kernel32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> globalUnlock: hMem [
 	^self ffiCall: #(LPVOID GlobalUnlock(void* hMem)) module: #kernel32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> openClipboard [
 <script>
 ^self openClipboard: (ExternalAddress fromAddress: 0).
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> openClipboard: aHwnd [
 <script> 
 	^self ffiCall: #(bool OpenClipboard( HWND aHwnd )) module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - bitmap image' }
 WinClipboard class >> pastePNGFromClipboard [
 
 	<script: 'self pastePNGFromClipboard inspect'>
@@ -331,7 +357,7 @@ WinClipboard class >> pastePNGFromClipboard [
 		ifFalse: [ ^ ImageReadWriter formFromStream: bytes readStream ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - bitmap image' }
 WinClipboard class >> pastePNGFromDIB [
 
 	<script: 'self pastePNGFromDIB inspect'>
@@ -339,11 +365,10 @@ WinClipboard class >> pastePNGFromDIB [
 	bytes := self getByteClipboardData: self CF_DIB.
 	bytes isNil
 		ifTrue: [ ^ nil ]
-		ifFalse: [ 
-			^ self halt: 'TODO']
+		ifFalse: [ ^ self halt: 'TODO' ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - bitmap image' }
 WinClipboard class >> pastePNGFromHDROP [
 
 	<script: 'self pastePNGFromHDROP inspect'>
@@ -354,58 +379,57 @@ WinClipboard class >> pastePNGFromHDROP [
 		ifFalse: [ ^ ImageReadWriter formFromStream: bytes readStream ]
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - SVG' }
 WinClipboard class >> pasteSVGFromClipboard [
-
 	<script: 'self pasteSVGFromClipboard inspect'>
+
 	| data |
 	data := self getByteClipboardDataFrom: 'image/svg+xml'.
-	data ifNil: [ 
-		data := self getByteClipboardDataFrom:
-			        'image/x-inkscape-svg' ].
+	data ifNil: [ data := self getByteClipboardDataFrom: 'image/x-inkscape-svg' ].
 	data ifNil: [ ^ nil ].
 	data := data utf8Decoded.
-	^ BlSvgConverter convertFromString: data
+	^ self convertStringToSVG: data
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> registerClipboardFormat: aString [
 	^self ffiCall: #(UINT RegisterClipboardFormatA(LPTSTR aString)) module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> registeredClipboardFormats [
 
 	clipboardFormats isNil ifTrue: [clipboardFormats := Dictionary new].
 	^clipboardFormats
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - utils' }
 WinClipboard class >> resetClipboard [
 cf_html := nil.
 clipboardFormats := nil.
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #'api - HTML' }
 WinClipboard class >> resetHTML [
-^self resetClipboard
+
+	^ self resetClipboard
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> setByteClipboardData: aIntType value: aByteArray [
 "WinClipboard setClipboardByteData: 15 value: #(55 55 55)"
 
 	^self setClipboardByteData: aByteArray withFormat: aIntType
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> setClipboardByteData: aByteArray withFormat: aFormat [
 
 	self clearClipboard.
 	^self addClipboardByteData: aByteArray withFormat: aFormat
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> setClipboardTextData: aFormat value: aString [
 
 	^ self
@@ -413,7 +437,7 @@ WinClipboard class >> setClipboardTextData: aFormat value: aString [
 		  module: #user32
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #private }
 WinClipboard class >> setPNGByteClipboardData: aByteArray [
 
 	| type |
