@@ -263,7 +263,7 @@ WinClipboard class >> getHTMLClipboardData [
 	datum := self getClipboardData: self CF_HTML.
 	val := datum isNull
 		       ifTrue: [ nil ]
-		       ifFalse: [ datum fromBasicCString ].
+		       ifFalse: [ datum bytesFromCString ].
 	self closeClipboard.
 	^ val
 ]
