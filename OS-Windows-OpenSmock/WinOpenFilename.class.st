@@ -35,7 +35,7 @@ Class {
 	#category : #'OS-Windows-OpenSmock-Dialogs-Support'
 }
 
-{ #category : #'field definition' }
+{ #category : #private }
 WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean [
 	"Build a string with a list of displayed files"
 
@@ -50,7 +50,7 @@ WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anE
 	"Only build list with same number of arguments"
 	(aTypenameList notNil and:[anExtensionList notNil and:[aTypenameList size = anExtensionList size]]) ifTrue:[
 		1 to: aTypenameList size do:[ :i | 
-			string := string , (aTypenameList at: i) , 0 asCharacter asString , (anExtensionList at: i) , 0 asCharacter asString, 0 asCharacter asString.
+			string := string , (aTypenameList at: i) , 0 asCharacter asString , (anExtensionList at: i) , 0 asCharacter asString.
 		].
 	].
 	
@@ -59,52 +59,7 @@ WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anE
 	^ string
 ]
 
-{ #category : #'field definition' }
-WinOpenFilename class >> chooseFilename [
-	"self chooseFilename"
-
-	| ofn szFile str buf |
-	ofn := self new.
-	ofn lStructSize: self structureSize.
-	szFile := FFIExternalArray externalNewType: 'char' size: 260.
-	ofn hwndOwner: (ExternalAddress fromAddress: 0).
-	ofn lpstrFile: szFile.
-	szFile at: 1 put: 0 asCharacter.
-	ofn nMaxFile: szFile size.
-
-	str := self buildStringFilenameTypes: nil extensions: nil allFilesOption: true.
-
-	buf := FFIExternalArray externalNewType: 'char' size: str size.
-	str doWithIndex: [ :k :i | buf at: i put: k ].
-	ofn lpstrFilter: buf.
-	ofn nFilterIndex: 0.
-	ofn nMaxFileTitle: 0.
-	^ ofn
-]
-
-{ #category : #'field definition' }
-WinOpenFilename class >> chooseFilenameType: aTypename extension: aString [
-
-	| ofn szFile str buf |
-	ofn := self new.
-	ofn lStructSize: self structureSize.
-	szFile := FFIExternalArray externalNewType: 'char' size: 260.
-	ofn hwndOwner: (ExternalAddress fromAddress: 0).
-	ofn lpstrFile: szFile.
-	szFile at: 1 put: 0 asCharacter.
-	ofn nMaxFile: szFile size.
-	
-	str := self buildStringFilenameTypes: (OrderedCollection with: aTypename) extensions: (OrderedCollection with: aString) allFilesOption: true.
-		
-	buf := FFIExternalArray externalNewType: 'char' size: str size.
-	str doWithIndex: [ :k :i | buf at: i put: k ].
-	ofn lpstrFilter: buf.
-	ofn nFilterIndex: 2.
-	ofn nMaxFileTitle: 0.
-	^ ofn
-]
-
-{ #category : #'field definition' }
+{ #category : #constructor }
 WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean [
 
 	| ofn szFile str buf |
@@ -115,38 +70,14 @@ WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtens
 	ofn lpstrFile: szFile.
 	szFile at: 1 put: 0 asCharacter.
 	ofn nMaxFile: szFile size.
-	
+
 	str := self buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean.
-		
+
 	buf := FFIExternalArray externalNewType: 'char' size: str size.
 	str doWithIndex: [ :k :i | buf at: i put: k ].
 	ofn lpstrFilter: buf.
 	ofn nFilterIndex: 2.
 	ofn nMaxFileTitle: 0.
-	^ ofn
-]
-
-{ #category : #'field definition' }
-WinOpenFilename class >> defaultAllFilename [
-
-	| ofn szFile str buf |
-	ofn := self new.
-	ofn lStructSize: self structureSize.
-	szFile := FFIExternalArray externalNewType: 'char' size: 100.
-	"ofn hwndOwner: WinWindow pharoWindow."
-	ofn hwndOwner: 0.
-	ofn lpstrFile: szFile.
-	szFile at: 1 put: 0 asCharacter.
-	ofn nMaxFile: szFile size.
-	str := 'All' , 0 asCharacter asString , '*.*'
-	       , 0 asCharacter asString , 'TEXT' , 0 asCharacter asString
-	       , '*.TXT' , 0 asCharacter asString.
-	buf := FFIExternalArray externalNewType: 'char' size: str size.
-	str doWithIndex: [ :k :i | buf at: i put: k ].
-	ofn lpstrFilter: buf.
-	ofn nFilterIndex: 1.
-	ofn nMaxFileTitle: 0.
-
 	^ ofn
 ]
 

@@ -53,7 +53,7 @@ WinFileDialog class >> openFilenames: aStringList extensions: aString2List allFi
 	<script: ' | filenames extensions |
 	filenames := OrderedCollection with: ''Text/Log'' with: ''Data''.
 	extensions := OrderedCollection with: ''*.txt;*.log'' with: ''*.csv''.
-	(self openFilenames: filenames extensions: extensions allFilesOption: false) inspect'>
+	(self openFilenames: filenames extensions: extensions allFilesOption: true) inspect'>
 
 	| winFilename |
 	winFilename := WinOpenFilename chooseFilenameTypes: aStringList extensions: aString2List allFilesOption: aBoolean.
