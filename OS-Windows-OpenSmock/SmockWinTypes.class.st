@@ -47,7 +47,7 @@ SmockWinTypes class >> initStringTypes [
 
 { #category : #'class initialization' }
 SmockWinTypes class >> initialize [
-
 	<script>
-	
+
+	super initialize		
 ]
