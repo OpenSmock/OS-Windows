@@ -62,10 +62,10 @@ WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anE
 ]
 
 { #category : #constructor }
-WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean [
-
+WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean initialDir: aFileReference [
 	| ofn szFile str buf |
 	ofn := self new.
+
 	ofn lStructSize: self structureSize.
 	szFile := FFIExternalArray externalNewType: 'char' size: 260.
 	ofn hwndOwner: (ExternalAddress fromAddress: 0).
@@ -73,13 +73,23 @@ WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtens
 	szFile at: 1 put: 0 asCharacter.
 	ofn nMaxFile: szFile size.
 
-	str := self buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean.
+	"Initial Dir"
+	(aFileReference notNil and:[aFileReference exists and:[aFileReference isDirectory]]) ifTrue:[ | var url |
+		url := aFileReference pathString.
+		var := FFIExternalArray externalNewType: 'char' size: url size.
+		url doWithIndex: [ :k :i | var at: i put: k ].
+		ofn lpstrInitialDir: var
+	].
 
+	"Availables Extensions with names"
+	str := self buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean.
 	buf := FFIExternalArray externalNewType: 'char' size: str size.
 	str doWithIndex: [ :k :i | buf at: i put: k ].
+
 	ofn lpstrFilter: buf.
 	ofn nFilterIndex: 2.
 	ofn nMaxFileTitle: 0.
+
 	^ ofn
 ]
 

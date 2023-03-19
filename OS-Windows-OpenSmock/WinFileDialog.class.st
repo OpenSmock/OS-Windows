@@ -32,10 +32,38 @@ WinFileDialog class >> openFilename [
 ]
 
 { #category : #'api - file' }
-WinFileDialog class >> openFilename: aString extension: aString2 [
-	<script: '(self openFilename: ''Text/Data'' extension: ''*.txt;*.csv'') inspect'>
+WinFileDialog class >> openFilename: anInitialDirFileReference [
+	<script: '(self openFilename: FileSystem workingDirectory) inspect'>
 
-	^ self openFilenames: (Array with: aString) extensions: (Array with: aString2) allFilesOption: false
+	| winFilename |
+	winFilename := WinOpenFilename
+		               chooseFilenameTypes: nil
+		               extensions: nil
+		               allFilesOption: false
+		               initialDir: anInitialDirFileReference.
+
+	^ self openWinFilename: winFilename
+]
+
+{ #category : #'api - file' }
+WinFileDialog class >> openFilename: aString extension: aString2 [
+	<script:'(self openFilename: ''Text/Data'' extension: ''*.txt;*.csv'') inspect'>
+
+	^ self
+		  openFilenames: (Array with: aString)
+		  extensions: (Array with: aString2)
+		  allFilesOption: false
+]
+
+{ #category : #'api - file' }
+WinFileDialog class >> openFilename: aString extension: aString2 initialDir: aFileReference [
+	<script:'(self openFilename: ''Text/Data'' extension: ''*.txt;*.csv'' initialDir: FileSystem workingDirectory) inspect'>
+
+	^ self
+		  openFilenames: (Array with: aString)
+		  extensions: (Array with: aString2)
+		  allFilesOption: false
+		  initialDir: aFileReference
 ]
 
 { #category : #'api - file' }
@@ -45,7 +73,10 @@ WinFileDialog class >> openFilenames: aStringList extensions: aString2List [
 	extensions := OrderedCollection with: ''*.txt;*.log'' with: ''*.csv''.
 	(self openFilenames: filenames extensions: extensions) inspect'>
 
-	^ self openFilenames: aStringList extensions: aString2List allFilesOption: false
+	^ self
+		  openFilenames: aStringList
+		  extensions: aString2List
+		  allFilesOption: false
 ]
 
 { #category : #'api - file' }
@@ -56,8 +87,44 @@ WinFileDialog class >> openFilenames: aStringList extensions: aString2List allFi
 	(self openFilenames: filenames extensions: extensions allFilesOption: true) inspect'>
 
 	| winFilename |
-	winFilename := WinOpenFilename chooseFilenameTypes: aStringList extensions: aString2List allFilesOption: aBoolean.
+	winFilename := WinOpenFilename
+		               chooseFilenameTypes: aStringList
+		               extensions: aString2List
+		               allFilesOption: aBoolean
+		               initialDir: nil.
+
 	^ self openWinFilename: winFilename
+]
+
+{ #category : #'api - file' }
+WinFileDialog class >> openFilenames: aStringList extensions: aString2List allFilesOption: aBoolean initialDir: aFileReference [
+	<script: ' | filenames extensions |
+	filenames := OrderedCollection with: ''Text/Log'' with: ''Data''.
+	extensions := OrderedCollection with: ''*.txt;*.log'' with: ''*.csv''.
+	(self openFilenames: filenames extensions: extensions allFilesOption: true initialDir: FileSystem workingDirectory) inspect'>
+
+	| winFilename |
+	winFilename := WinOpenFilename
+		               chooseFilenameTypes: aStringList
+		               extensions: aString2List
+		               allFilesOption: aBoolean
+		               initialDir: aFileReference.
+
+	^ self openWinFilename: winFilename
+]
+
+{ #category : #'api - file' }
+WinFileDialog class >> openFilenames: aStringList extensions: aString2List initialDir: aFileReference [
+	<script: ' | filenames extensions |
+	filenames := OrderedCollection with: ''Text/Log'' with: ''Data''.
+	extensions := OrderedCollection with: ''*.txt;*.log'' with: ''*.csv''.
+	(self openFilenames: filenames extensions: extensions initialDir: FileSystem workingDirectory) inspect'>
+
+	^ self
+		  openFilenames: aStringList
+		  extensions: aString2List
+		  allFilesOption: false
+		  initialDir: aFileReference
 ]
 
 { #category : #private }
