@@ -43,15 +43,3 @@ WinWindow >> openIcon: hWnd [
 		ffiCall: #( BOOL OpenIcon #( HWND hWnd ) )
 		module: #user32
 ]
-
-{ #category : #'*OS-Windows-OpenSmock' }
-WinWindow class >> pharoWindowFixed [
-	<script: 'self pharoWindowFixed inspect'>
-
-	| sdlWindowInfo handle osWindow |
-	osWindow := self currentWorld worldState worldRenderer window.
-	sdlWindowInfo := osWindow backendWindow getWMInfo.
-	handle := sdlWindowInfo info win window.
-
-	^ self fromExternalHandle: handle
-]
