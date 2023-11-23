@@ -17,11 +17,49 @@ Class {
 }
 
 { #category : #primitives }
+WinFileDialog class >> PCIDLIST_ABSOLUTEder: aBrowseInfo [
+
+	^ self
+		  ffiCall: #(  PIDLIST_ABSOLUTE SHBrowseForFolderA #( #WinBrowseInfo
+			        aBrowseInfo ) )
+		  library: #shell32
+]
+
+{ #category : #primitives }
 WinFileDialog class >> comDlgExtendedError [
 
 	^ self
 		  ffiCall: #( DWORD CommDlgExtendedError #(  ) )
 		  library: #comdlg32
+]
+
+{ #category : #'api - file' }
+WinFileDialog class >> openAdvancedFolder [
+
+	<script: 'self openAdvancedFolder inspect'>
+	| bi path rez |
+	bi := WinBrowseInfo getAdvancedBrowseInfo.
+	"path := FFIExternalArray externalNewType: 'char' size: 260."
+	path := ExternalData
+		        fromHandle: (ExternalAddress allocate: 260)
+		        type: ExternalType char asPointerType.
+	rez := self primBrowseForFolder: bi.
+	self primGetPath: path getHandle fromIDList: rez.
+	^ path bytesFromCString asString
+]
+
+{ #category : #'api - file' }
+WinFileDialog class >> openAdvancedFolder: aFileReference withLabel: aTxt [
+
+	| bi path rez |
+	bi := WinBrowseInfo getAdvancedBrowseInfo: aTxt.
+	"path := FFIExternalArray externalNewType: 'char' size: 260."
+	path := ExternalData
+		        fromHandle: (ExternalAddress allocate: 260)
+		        type: ExternalType char asPointerType.
+	rez := self primBrowseForFolder: bi.
+	self primGetPath: path getHandle fromIDList: rez.
+	^ path bytesFromCString asString
 ]
 
 { #category : #'api - file' }
@@ -127,6 +165,16 @@ WinFileDialog class >> openFilenames: aStringList extensions: aString2List initi
 		  initialDir: aFileReference
 ]
 
+{ #category : #'api - file' }
+WinFileDialog class >> openFolder [
+
+	<script: 'self openFolder inspect'>
+	| bi |
+	bi := WinBrowseInfo getBasicBrowseInfo.
+	self primBrowseForFolder: bi.
+	^ bi pszDisplayName bytesFromCString asString
+]
+
 { #category : #private }
 WinFileDialog class >> openWinFilename: aWinFilename [
 	
@@ -136,6 +184,24 @@ WinFileDialog class >> openWinFilename: aWinFilename [
 	aWinFilename lpstrFile free.
 	aWinFilename lpstrFilter free.
 	^ file
+]
+
+{ #category : #primitives }
+WinFileDialog class >> primBrowseForFolder: aBrowseInfo [
+ 
+	^ self
+		  ffiCall: #( PIDLIST_ABSOLUTE SHBrowseForFolderA #( #WinBrowseInfo
+			        aBrowseInfo ) )
+		  library: #shell32
+]
+
+{ #category : #primitives }
+WinFileDialog class >> primGetPath: pszPath fromIDList: pidl [
+
+	^ self
+		  ffiCall:
+		  #( int SHGetPathFromIDListA #( PCIDLIST_ABSOLUTE pidl , char* pszPath ) )
+		  library: #shell32
 ]
 
 { #category : #primitives }

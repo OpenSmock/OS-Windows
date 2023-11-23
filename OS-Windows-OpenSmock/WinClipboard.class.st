@@ -255,6 +255,25 @@ WinClipboard class >> currentClipboardEntries [
 	^ oc
 ]
 
+{ #category : #accessing }
+WinClipboard class >> currentClipboardFormatIDs [
+	"Return a list a numeric types into the current clipboard"
+	<script: 'WinClipboard currentClipboardFormatIDs inspect'>
+
+	| base stop oc |
+	self openClipboard.
+	base := 0.
+	stop := false.
+	oc := OrderedCollection new.
+	[ stop ] whileFalse: [
+		base := WinClipboardFormat enumClipboardFormats: base.
+		base = 0
+			ifTrue: [ stop := true ]
+			ifFalse: [ oc add: base ] ].
+	self closeClipboard.
+	^ oc
+]
+
 { #category : #'api - utils' }
 WinClipboard class >> currentClipboardTypes [
 	"Return a list a numeric types into the current clipboard"

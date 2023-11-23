@@ -59,6 +59,16 @@ WinClipboardEntry >> isSupported: anObject [
 	isSupported := anObject
 ]
 
+{ #category : #printing }
+WinClipboardEntry >> printOn: aStream [
+	super printOn: aStream.
+	aStream
+		space;
+		nextPut: $-;
+		space;
+		nextPutAll: type asString
+]
+
 { #category : #accessing }
 WinClipboardEntry >> type [
 

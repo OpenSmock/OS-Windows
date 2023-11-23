@@ -5,8 +5,11 @@ Class {
 	#name : #SmockWinTypes,
 	#superclass : #WinTypes,
 	#classVars : [
+		'BFFCALLBACK',
 		'LONG_PTR',
-		'LPOFNHOOKPROC'
+		'LPOFNHOOKPROC',
+		'PCIDLIST_ABSOLUTE',
+		'PIDLIST_ABSOLUTE'
 	],
 	#category : #'OS-Windows-OpenSmock-Dialogs-Support'
 }
@@ -25,7 +28,10 @@ SmockWinTypes class >> initKnownTypes [
 	LPOFNHOOKPROC := LONG_PTR.
 
 	HANDLE := #'void*'.
-	HWND := #'void*'
+	HWND := #'void*'.
+	PCIDLIST_ABSOLUTE := #'void*'.
+	PIDLIST_ABSOLUTE := #'void*'.
+	BFFCALLBACK := #'void*'
 ]
 
 { #category : #'private - initialization' }
