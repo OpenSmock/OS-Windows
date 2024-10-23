@@ -13,7 +13,7 @@ BaselineOfOSWindowsOpenSmock >> baseline: spec [
 	"Load Pharo-OS-Windows dependency"
 	spec
 		baseline: #OSWindows
-		with: [ spec repository: 'github://astares/Pharo-OS-Windows/src' ].
+		with: [ spec repository: 'github://OpenSmock/Pharo-OS-Windows/src' ].
 
 	"Load the project"
 	spec package: 'OS-Windows-OpenSmock'.
