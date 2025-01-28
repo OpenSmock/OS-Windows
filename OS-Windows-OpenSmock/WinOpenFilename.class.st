@@ -76,8 +76,10 @@ WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtens
 	"Initial Dir"
 	(aFileReference notNil and:[aFileReference exists and:[aFileReference isDirectory]]) ifTrue:[ | var url |
 		url := aFileReference pathString.
-		var := FFIExternalArray externalNewType: 'char' size: url size.
+		var := FFIExternalArray externalNewType: 'char' size: url size+1.
 		url doWithIndex: [ :k :i | var at: i put: k ].
+		"0 ends the char*"
+		var at: url size+1 put: 0.
 		ofn lpstrInitialDir: var
 	].
 
