@@ -5,7 +5,7 @@ WinMessageBox class >> errorMessageBox: lpText title: lpCaption [
 
 	| hWnd uType txt |
 	txt := ByteArray new: lpText size+1.
-	lpText doWithIndex: [ :e :i | txt at: i put: e ].
+	lpText asByteArray doWithIndex: [ :e :i | txt at: i put: e ].
 	txt at: lpText size +1 put: 0.
 
 	hWnd := ExternalAddress fromAddress: 0.
