@@ -37,6 +37,17 @@ Class {
 	#category : #'OS-Windows-OpenSmock-Dialogs-Support'
 }
 
+{ #category : #constructor }
+WinOpenFilename class >> buildCharPointerWith: aString [
+
+	| buf |
+	buf := FFIExternalArray externalNewType: 'char' size: aString size + 1.
+	aString doWithIndex: [ :k :i | buf at: i put: k ].
+	"0 ends the char*"
+	buf at: aString size + 1 put: 0 asCharacter.
+	^buf.
+]
+
 { #category : #private }
 WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean [
 	"Build a string with a list of displayed files"
@@ -63,6 +74,7 @@ WinOpenFilename class >> buildStringFilenameTypes: aTypenameList extensions: anE
 
 { #category : #constructor }
 WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean initialDir: aFileReference [
+
 	| ofn szFile str buf |
 	ofn := self new.
 
@@ -74,18 +86,21 @@ WinOpenFilename class >> chooseFilenameTypes: aTypenameList extensions: anExtens
 	ofn nMaxFile: szFile size.
 
 	"Initial Dir"
-	(aFileReference notNil and:[aFileReference exists and:[aFileReference isDirectory]]) ifTrue:[ | var url |
-		url := aFileReference pathString.
-		var := FFIExternalArray externalNewType: 'char' size: url size.
-		url doWithIndex: [ :k :i | var at: i put: k ].
-		ofn lpstrInitialDir: var
-	].
+	(aFileReference notNil and: [
+		 aFileReference exists and: [ aFileReference isDirectory ] ])
+		ifTrue: [
+			| var url |
+			url := aFileReference pathString.
+			var := self buildCharPointerWith: url.
+			ofn lpstrInitialDir: var ].
 
 	"Availables Extensions with names"
-	str := self buildStringFilenameTypes: aTypenameList extensions: anExtensionList allFilesOption: aBoolean.
-	buf := FFIExternalArray externalNewType: 'char' size: str size.
-	str doWithIndex: [ :k :i | buf at: i put: k ].
-
+	str := self
+		       buildStringFilenameTypes: aTypenameList
+		       extensions: anExtensionList
+		       allFilesOption: aBoolean.
+	buf := self buildCharPointerWith: str.
+	
 	ofn lpstrFilter: buf.
 	ofn nFilterIndex: 2.
 	ofn nMaxFileTitle: 0.
