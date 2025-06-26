@@ -1,7 +1,6 @@
 # OS-Windows
 
 Extensions for Pharo-OS-Windows in OpenSmock which includes: 
-- Clipboard access and management
 - WinFileDialog access (request files with extensions)
 - WinMessageBox extensions to open Warning and Error popup
 
