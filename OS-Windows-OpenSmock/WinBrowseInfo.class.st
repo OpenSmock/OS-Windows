@@ -51,66 +51,53 @@ WinBrowseInfo class >> fieldsDesc [
   int               iImage #';' )
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constructor }
 WinBrowseInfo class >> getAdvancedBrowseInfo [
 
-	| bi folder title var |
-	bi := self new.
-	bi hwndOwner: (ExternalAddress fromAddress: 0).
-	bi pidlRoot: (ExternalAddress fromAddress: 0).
-	folder := FFIExternalArray externalNewType: 'char' size: 260.
-	bi pszDisplayName: folder.
-	title := 'Sélection d''un répertoire'.
-	var := FFIExternalArray externalNewType: 'char' size: title size.
-	title doWithIndex: [ :k :i | var at: i put: k ].
-	bi lpszTitle: var.
-
-	bi ulFlags: self BIF_USENEWUI. 
-	bi lpfn: (ExternalAddress fromAddress: 0).
-	bi lParam: (ExternalAddress fromAddress: 0).
-
-	^ bi
+	^ self getAdvancedBrowseInfo: nil
 ]
 
-{ #category : #'as yet unclassified' }
-WinBrowseInfo class >> getAdvancedBrowseInfo: aTxt [
+{ #category : #constructor }
+WinBrowseInfo class >> getAdvancedBrowseInfo: aTitle [
 
-	| bi folder title var |
-	bi := self new.
-	bi hwndOwner: (ExternalAddress fromAddress: 0).
-	bi pidlRoot: (ExternalAddress fromAddress: 0).
-	folder := FFIExternalArray externalNewType: 'char' size: 260.
-	bi pszDisplayName: folder.
-	title := aTxt.
-	var := FFIExternalArray externalNewType: 'char' size: title size.
-	title doWithIndex: [ :k :i | var at: i put: k ].
-	bi lpszTitle: var.
-
+	| bi |
+	bi := self newBrowseInfo: aTitle.
 	bi ulFlags: self BIF_USENEWUI.
-	bi lpfn: (ExternalAddress fromAddress: 0).
-	bi lParam: (ExternalAddress fromAddress: 0).
-
+	
 	^ bi
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #constructor }
 WinBrowseInfo class >> getBasicBrowseInfo [
 
-	| bi folder title var |
+	^ self getBasicBrowseInfo: nil
+]
+
+{ #category : #constructor }
+WinBrowseInfo class >> getBasicBrowseInfo: aTitle [
+
+	^ self newBrowseInfo: aTitle
+]
+
+{ #category : #private }
+WinBrowseInfo class >> newBrowseInfo: aTitle [
+
+	| bi folder |
 	bi := self new.
 	bi hwndOwner: (ExternalAddress fromAddress: 0).
 	bi pidlRoot: (ExternalAddress fromAddress: 0).
 	folder := FFIExternalArray externalNewType: 'char' size: 260.
 	bi pszDisplayName: folder.
-	title := 'Sélection d''un répertoire'.
-	var := FFIExternalArray externalNewType: 'char' size: title size.
-	title doWithIndex: [ :k :i | var at: i put: k ].
-	bi lpszTitle: var.
 	
-	bi ulFlags: self BIF_NEWDIALOGSTYLE.
+	aTitle ifNotNil:[ | var |
+		var := FFIExternalArray externalNewType: 'char' size: aTitle size.
+		aTitle doWithIndex: [ :k :i | var at: i put: k ].
+		bi lpszTitle: var.
+	].
+
 	bi lpfn: (ExternalAddress fromAddress: 0).
 	bi lParam: (ExternalAddress fromAddress: 0).
-
+	
 	^ bi
 ]
 
