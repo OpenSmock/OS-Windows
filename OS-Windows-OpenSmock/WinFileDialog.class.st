@@ -25,6 +25,20 @@ WinFileDialog class >> PCIDLIST_ABSOLUTEder: aBrowseInfo [
 		  library: #shell32
 ]
 
+{ #category : #private }
+WinFileDialog class >> browseAndGetFolder: aWinBrowseInfo [
+
+	| path result |
+	path := ExternalData
+		        fromHandle: (ExternalAddress allocate: 260)
+		        type: ExternalType char asPointerType.
+		
+	result := self primBrowseForFolder: aWinBrowseInfo.
+	self primGetPath: path getHandle fromIDList: result.
+	
+	^ path bytesFromCString asString
+]
+
 { #category : #primitives }
 WinFileDialog class >> comDlgExtendedError [
 
@@ -33,33 +47,23 @@ WinFileDialog class >> comDlgExtendedError [
 		  library: #comdlg32
 ]
 
-{ #category : #'api - file' }
+{ #category : #'api - folder' }
 WinFileDialog class >> openAdvancedFolder [
+	"Open an advanced directory browser with several options"
 
 	<script: 'self openAdvancedFolder inspect'>
-	| bi path rez |
+	| bi |
 	bi := WinBrowseInfo getAdvancedBrowseInfo.
-	"path := FFIExternalArray externalNewType: 'char' size: 260."
-	path := ExternalData
-		        fromHandle: (ExternalAddress allocate: 260)
-		        type: ExternalType char asPointerType.
-	rez := self primBrowseForFolder: bi.
-	self primGetPath: path getHandle fromIDList: rez.
-	^ path bytesFromCString asString
+	^ self browseAndGetFolder: bi
 ]
 
-{ #category : #'api - file' }
+{ #category : #'api - folder' }
 WinFileDialog class >> openAdvancedFolder: aFileReference withLabel: aTxt [
 
-	| bi path rez |
+	| bi |
+	self flag:'pla: starting location is not yet implemented, see issue #5'.
 	bi := WinBrowseInfo getAdvancedBrowseInfo: aTxt.
-	"path := FFIExternalArray externalNewType: 'char' size: 260."
-	path := ExternalData
-		        fromHandle: (ExternalAddress allocate: 260)
-		        type: ExternalType char asPointerType.
-	rez := self primBrowseForFolder: bi.
-	self primGetPath: path getHandle fromIDList: rez.
-	^ path bytesFromCString asString
+	^ self browseAndGetFolder: bi
 ]
 
 { #category : #'api - file' }
@@ -165,14 +169,14 @@ WinFileDialog class >> openFilenames: aStringList extensions: aString2List initi
 		  initialDir: aFileReference
 ]
 
-{ #category : #'api - file' }
+{ #category : #'api - folder' }
 WinFileDialog class >> openFolder [
+	"Open a basic directory browser"
 
 	<script: 'self openFolder inspect'>
 	| bi |
 	bi := WinBrowseInfo getBasicBrowseInfo.
-	self primBrowseForFolder: bi.
-	^ bi pszDisplayName bytesFromCString asString
+	^ self browseAndGetFolder: bi
 ]
 
 { #category : #private }
